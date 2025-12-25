@@ -1,6 +1,4 @@
-
 package com.example.krizenfoods.view
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,8 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,12 +16,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.krizenfoods.R
@@ -31,19 +25,15 @@ import com.example.krizenfoods.controllers.AuthController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(
-    onNavigateToSignup: () -> Unit,
-    onNavigateToHome: () -> Unit,
-    onNavigateToForgotPassword: () -> Unit  // NEW PARAMETER
+fun ForgotPasswordScreen(
+    onNavigateBack: () -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-
-    // State for error and loading
-    var errorMessage by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    var successMessage by remember { mutableStateOf("") }
 
-    // Auth Controller
     val authController = remember { AuthController() }
 
     Box(
@@ -61,7 +51,7 @@ fun LoginScreen(
             contentScale = ContentScale.Crop
         )
 
-        // Login Card
+        // Forgot Password Card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -77,7 +67,25 @@ fun LoginScreen(
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Logo at top
+                // Back Button at top left
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color(0xFFF57C00),
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable { onNavigateBack() }
+                            .padding(4.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Logo
                 Image(
                     painter = painterResource(id = R.drawable.krizenlogo),
                     contentDescription = "App Logo",
@@ -88,9 +96,20 @@ fun LoginScreen(
 
                 // Title
                 Text(
-                    text = "Welcome to Krizen Foods",
+                    text = "Reset Password",
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Instructions
+                Text(
+                    text = "Enter your email address and we'll send you a link to reset your password.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -99,7 +118,7 @@ fun LoginScreen(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Email") },
+                    label = { Text("Email Address") },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Email,
@@ -115,44 +134,6 @@ fun LoginScreen(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Password Field
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Password") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Lock,
-                            contentDescription = "Password Icon"
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        focusedLabelColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-
-                // NEW: Forgot Password Text - ADD THIS SECTION
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Forgot Password?",
-                    color = Color(0xFFF57C00), // Your app's orange color
-                    fontSize = 14.sp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            onNavigateToForgotPassword()
-                        }
-                        .padding(vertical = 4.dp),
-                    textAlign = TextAlign.End
-                )
-
                 // Error Message Display
                 if (errorMessage.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(16.dp))
@@ -165,27 +146,38 @@ fun LoginScreen(
                     )
                 }
 
+                // Success Message Display
+                if (successMessage.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = successMessage,
+                        color = Color.Green,
+                        fontSize = 14.sp,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Login Button
+                // Send Reset Link Button
                 Button(
                     onClick = {
-                        // Validation
-                        if (email.isBlank() || password.isBlank()) {
-                            errorMessage = "Please fill all fields"
+                        if (email.isBlank()) {
+                            errorMessage = "Please enter your email address"
                             return@Button
                         }
 
                         isLoading = true
                         errorMessage = ""
+                        successMessage = ""
 
-                        // Call AuthController
-                        authController.login(
+                        // Call Firebase sendPasswordResetEmail
+                        authController.sendPasswordResetEmail(
                             email = email,
-                            password = password,
                             onSuccess = {
                                 isLoading = false
-                                onNavigateToHome()
+                                successMessage = "Password reset link sent to your email. Please check your inbox."
                             },
                             onError = { error ->
                                 isLoading = false
@@ -209,7 +201,7 @@ fun LoginScreen(
                         )
                     } else {
                         Text(
-                            text = "Login",
+                            text = "Send Reset Link",
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -217,26 +209,16 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Sign Up Text with Hyperlink
-                val signUpText = buildAnnotatedString {
-                    append("Don't have an account? ")
-                    withStyle(
-                        style = SpanStyle(
-                            color = Color(0xFFF57C00),
-                            fontWeight = MaterialTheme.typography.bodyMedium.fontWeight
-                        )
-                    ) {
-                        append("Sign Up")
-                    }
-                }
-
+                // Back to Login Text
                 Text(
-                    text = signUpText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center,
+                    text = "Back to Login",
+                    color = Color(0xFFF57C00),
+                    fontSize = 16.sp,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onNavigateToSignup() }
+                        .clickable { onNavigateToLogin() }
+                        .padding(vertical = 8.dp),
+                    textAlign = TextAlign.Center
                 )
             }
         }

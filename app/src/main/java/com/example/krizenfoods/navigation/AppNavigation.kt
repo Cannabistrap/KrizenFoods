@@ -5,9 +5,11 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.krizenfoods.view.DashboardScreen
 import com.example.krizenfoods.view.LoginScreen
 import com.example.krizenfoods.view.SignupScreen
 import com.example.krizenfoods.view.SplashScreen
+import com.example.krizenfoods.view.ForgotPasswordScreen  // NEW IMPORT
 
 @Composable
 fun AppNavigation() {
@@ -33,9 +35,14 @@ fun AppNavigation() {
                     navController.navigate("signup")
                 },
                 onNavigateToHome = {
-                    // For now, just show a toast or debug message
-                    // We'll implement home screen later
-                    println("Login successful - would navigate to home")
+                    // Navigates to dashboard
+                    navController.navigate("dashboard") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                // NEW: Forgot Password navigation
+                onNavigateToForgotPassword = {
+                    navController.navigate("forgotpassword")
                 }
             )
         }
@@ -48,11 +55,30 @@ fun AppNavigation() {
                     }
                 },
                 onNavigateToHome = {
-                    // For now, just show a toast or debug message
-                    // We'll implement home screen later
-                    println("Signup successful - would navigate to home")
+                    // Navigates to dashboard
+                    navController.navigate("dashboard") {
+                        popUpTo("signup") { inclusive = true }
+                    }
                 }
             )
+        }
+
+        // NEW: Forgot Password Screen
+        composable("forgotpassword") {
+            ForgotPasswordScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToLogin = {
+                    navController.navigate("login") {
+                        popUpTo("forgotpassword") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable("dashboard") {
+            DashboardScreen()
         }
     }
 }

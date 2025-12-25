@@ -59,6 +59,7 @@ fun SplashScreen(
                 modifier = Modifier
                     .size(200.dp)
                     .scale(pulseAnimation)
+
             )
         }
     }

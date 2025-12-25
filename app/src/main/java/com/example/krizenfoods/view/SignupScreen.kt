@@ -1,5 +1,4 @@
 
-
 package com.example.krizenfoods.view
 
 import androidx.compose.foundation.Image
@@ -27,7 +26,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.krizenfoods.R
+import com.example.krizenfoods.controllers.AuthController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,6 +40,13 @@ fun SignupScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+
+    // State for error and loading
+    var errorMessage by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+
+    // Auth Controller
+    val authController = remember { AuthController() }
 
     Box(
         modifier = Modifier
@@ -132,7 +140,7 @@ fun SignupScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Password Field (ALWAYS HIDDEN)
+                // Password Field
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -155,7 +163,7 @@ fun SignupScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Confirm Password Field (ALWAYS HIDDEN)
+                // Confirm Password Field
                 OutlinedTextField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
@@ -176,11 +184,58 @@ fun SignupScreen(
                     )
                 )
 
+                // Error Message Display
+                if (errorMessage.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = errorMessage,
+                        color = Color.Red,
+                        fontSize = 14.sp,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // Sign Up Button
                 Button(
-                    onClick = { onNavigateToHome() },
+                    onClick = {
+                        // Validation
+                        if (fullName.isBlank() || email.isBlank() || password.isBlank()) {
+                            errorMessage = "Please fill all fields"
+                            return@Button
+                        }
+
+                        if (password != confirmPassword) {
+                            errorMessage = "Passwords don't match"
+                            return@Button
+                        }
+
+                        if (password.length < 6) {
+                            errorMessage = "Password must be at least 6 characters"
+                            return@Button
+                        }
+
+                        isLoading = true
+                        errorMessage = ""
+
+                        // Call AuthController
+                        authController.signUp(
+                            email = email,
+                            password = password,
+                            fullName = fullName,
+                            onSuccess = {
+                                isLoading = false
+                                onNavigateToHome()
+                            },
+                            onError = { error ->
+                                isLoading = false
+                                errorMessage = error
+                            }
+                        )
+                    },
+                    enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -189,10 +244,17 @@ fun SignupScreen(
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(
-                        text = "Sign Up",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    } else {
+                        Text(
+                            text = "Sign Up",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))

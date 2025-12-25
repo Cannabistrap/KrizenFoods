@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "617811829568",
+    "firebase_url": "https://krizen-foods-default-rtdb.firebaseio.com",
+    "project_id": "krizen-foods",
+    "storage_bucket": "krizen-foods.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:617811829568:android:4e79e3d9b159975ea890a5",
+        "android_client_info": {
+          "package_name": "com.example.krizenfoods"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtE5h1IOGHVXqlp5UQc_JQ8eQx9-7q-Uo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
