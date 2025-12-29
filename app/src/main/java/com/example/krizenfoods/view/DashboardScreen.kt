@@ -361,7 +361,7 @@ fun DashboardScreen(
 ) {
     // Check if user is admin and show appropriate dashboard
     if (viewModel.isAdmin) {
-        AdminDashboardScreen(viewModel = viewModel)
+        AdminDashboardScreen(dashboardViewModel = viewModel)
     } else {
         UserDashboardScreen(viewModel = viewModel)
     }
