@@ -1,15 +1,204 @@
+//
+//package com.example.krizenfoods.navigation
+//
+//import androidx.compose.runtime.Composable
+//import androidx.navigation.compose.NavHost
+//import androidx.navigation.compose.composable
+//import androidx.navigation.compose.rememberNavController
+//import com.example.krizenfoods.view.DashboardScreen
+//import com.example.krizenfoods.view.LoginScreen
+//import com.example.krizenfoods.view.SignupScreen
+//import com.example.krizenfoods.view.SplashScreen
+//import com.example.krizenfoods.view.ForgotPasswordScreen  // NEW IMPORT
+//
+//@Composable
+//fun AppNavigation() {
+//    val navController = rememberNavController()
+//
+//    NavHost(
+//        navController = navController,
+//        startDestination = "splash"
+//    ) {
+//        composable("splash") {
+//            SplashScreen(
+//                onNavigateToLogin = {
+//                    navController.navigate("login") {
+//                        popUpTo("splash") { inclusive = true }
+//                    }
+//                }
+//            )
+//        }
+//
+//        composable("login") {
+//            LoginScreen(
+//                onNavigateToSignup = {
+//                    navController.navigate("signup")
+//                },
+//                onNavigateToHome = {
+//                    // Navigates to dashboard
+//                    navController.navigate("dashboard") {
+//                        popUpTo("login") { inclusive = true }
+//                    }
+//                },
+//                // NEW: Forgot Password navigation
+//                onNavigateToForgotPassword = {
+//                    navController.navigate("forgotpassword")
+//                }
+//            )
+//        }
+//
+//        composable("signup") {
+//            SignupScreen(
+//                onNavigateToLogin = {
+//                    navController.navigate("login") {
+//                        popUpTo("signup") { inclusive = true }
+//                    }
+//                },
+//                onNavigateToHome = {
+//                    // Navigates to dashboard
+//                    navController.navigate("dashboard") {
+//                        popUpTo("signup") { inclusive = true }
+//                    }
+//                }
+//            )
+//        }
+//
+//        // NEW: Forgot Password Screen
+//        composable("forgotpassword") {
+//            ForgotPasswordScreen(
+//                onNavigateBack = {
+//                    navController.popBackStack()
+//                },
+//                onNavigateToLogin = {
+//                    navController.navigate("login") {
+//                        popUpTo("forgotpassword") { inclusive = true }
+//                    }
+//                }
+//            )
+//        }
+//
+//        composable("dashboard") {
+//            DashboardScreen()
+//        }
+//    }
+//}
+
+//
+//package com.example.krizenfoods.navigation
+//
+//import androidx.compose.runtime.Composable
+//import androidx.navigation.compose.NavHost
+//import androidx.navigation.compose.composable
+//import androidx.navigation.compose.rememberNavController
+//import com.example.krizenfoods.view.AddFoodScreen
+//import com.example.krizenfoods.view.AdminDashboardScreen
+//import com.example.krizenfoods.view.DashboardScreen
+//import com.example.krizenfoods.view.ForgotPasswordScreen
+//import com.example.krizenfoods.view.LoginScreen
+//import com.example.krizenfoods.view.SignupScreen
+//import com.example.krizenfoods.view.SplashScreen
+//
+//@Composable
+//fun AppNavigation() {
+//    val navController = rememberNavController()
+//
+//    NavHost(
+//        navController = navController,
+//        startDestination = "splash"
+//    ) {
+//        composable("splash") {
+//            SplashScreen(
+//                onNavigateToLogin = {
+//                    navController.navigate("login") {
+//                        popUpTo("splash") { inclusive = true }
+//                    }
+//                }
+//            )
+//        }
+//
+//        composable("login") {
+//            LoginScreen(
+//                onNavigateToSignup = {
+//                    navController.navigate("signup")
+//                },
+//                onNavigateToHome = {
+//                    navController.navigate("dashboard") {
+//                        popUpTo("login") { inclusive = true }
+//                    }
+//                },
+//                onNavigateToForgotPassword = {
+//                    navController.navigate("forgotpassword")
+//                }
+//            )
+//        }
+//
+//        composable("signup") {
+//            SignupScreen(
+//                onNavigateToLogin = {
+//                    navController.navigate("login") {
+//                        popUpTo("signup") { inclusive = true }
+//                    }
+//                },
+//                onNavigateToHome = {
+//                    navController.navigate("dashboard") {
+//                        popUpTo("signup") { inclusive = true }
+//                    }
+//                }
+//            )
+//        }
+//
+//        composable("forgotpassword") {
+//            ForgotPasswordScreen(
+//                onNavigateBack = {
+//                    navController.popBackStack()
+//                },
+//                onNavigateToLogin = {
+//                    navController.navigate("login") {
+//                        popUpTo("forgotpassword") { inclusive = true }
+//                    }
+//                }
+//            )
+//        }
+//
+//        composable("dashboard") {
+//            DashboardScreen()
+//        }
+//
+//        // ✅ NEW: Admin Dashboard Route
+//        composable("admin_dashboard") {
+//            AdminDashboardScreen(
+//                onNavigateToAddFood = {
+//                    navController.navigate("add_food")
+//                }
+//            )
+//        }
+//
+//        // ✅ NEW: Add Food Screen Route
+//        composable("add_food") {
+//            AddFoodScreen(
+//                onNavigateBack = {
+//                    navController.popBackStack()
+//                }
+//            )
+//        }
+//    }
+//}
 
 package com.example.krizenfoods.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.krizenfoods.view.AddFoodScreen
+import com.example.krizenfoods.view.AdminDashboardScreen
 import com.example.krizenfoods.view.DashboardScreen
+import com.example.krizenfoods.view.ForgotPasswordScreen
 import com.example.krizenfoods.view.LoginScreen
 import com.example.krizenfoods.view.SignupScreen
 import com.example.krizenfoods.view.SplashScreen
-import com.example.krizenfoods.view.ForgotPasswordScreen  // NEW IMPORT
+import com.example.krizenfoods.viewmodel.DashboardViewModel
 
 @Composable
 fun AppNavigation() {
@@ -19,6 +208,7 @@ fun AppNavigation() {
         navController = navController,
         startDestination = "splash"
     ) {
+        // Splash Screen
         composable("splash") {
             SplashScreen(
                 onNavigateToLogin = {
@@ -29,24 +219,24 @@ fun AppNavigation() {
             )
         }
 
+        // Login Screen
         composable("login") {
             LoginScreen(
                 onNavigateToSignup = {
                     navController.navigate("signup")
                 },
                 onNavigateToHome = {
-                    // Navigates to dashboard
                     navController.navigate("dashboard") {
                         popUpTo("login") { inclusive = true }
                     }
                 },
-                // NEW: Forgot Password navigation
                 onNavigateToForgotPassword = {
                     navController.navigate("forgotpassword")
                 }
             )
         }
 
+        // Signup Screen
         composable("signup") {
             SignupScreen(
                 onNavigateToLogin = {
@@ -55,7 +245,6 @@ fun AppNavigation() {
                     }
                 },
                 onNavigateToHome = {
-                    // Navigates to dashboard
                     navController.navigate("dashboard") {
                         popUpTo("signup") { inclusive = true }
                     }
@@ -63,7 +252,7 @@ fun AppNavigation() {
             )
         }
 
-        // NEW: Forgot Password Screen
+        // Forgot Password Screen
         composable("forgotpassword") {
             ForgotPasswordScreen(
                 onNavigateBack = {
@@ -77,8 +266,31 @@ fun AppNavigation() {
             )
         }
 
+        // Dashboard Screen - Detects Admin or User
         composable("dashboard") {
-            DashboardScreen()
+            val viewModel: DashboardViewModel = viewModel()
+
+            if (viewModel.isAdmin) {
+                // Show Admin Dashboard with navigation callback
+                AdminDashboardScreen(
+                    dashboardViewModel = viewModel,
+                    onNavigateToAddFood = {
+                        navController.navigate("add_food")
+                    }
+                )
+            } else {
+                // Show Regular User Dashboard
+                DashboardScreen(viewModel = viewModel)
+            }
+        }
+
+        // Add Food Screen (Admin Only)
+        composable("add_food") {
+            AddFoodScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
