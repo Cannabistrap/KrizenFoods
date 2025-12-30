@@ -297,8 +297,6 @@
 //    }
 //}
 
-
-
 package com.example.krizenfoods.view
 
 import androidx.compose.foundation.clickable
@@ -352,7 +350,7 @@ fun AdminDashboardScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1976D2) // Blue for admin
+                    containerColor = Color(0xFF1976D2)
                 ),
                 actions = {
                     IconButton(onClick = onNavigateToAddFood) {
@@ -382,8 +380,8 @@ fun AdminDashboardScreen(
                     )
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Info, contentDescription = "Stats") },
-                    label = { Text("Stats") },
+                    icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Orders") },
+                    label = { Text("Orders") },
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     colors = NavigationBarItemDefaults.colors(
@@ -393,10 +391,21 @@ fun AdminDashboardScreen(
                     )
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                    label = { Text("Profile") },
+                    icon = { Icon(Icons.Default.Info, contentDescription = "Stats") },
+                    label = { Text("Stats") },
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color(0xFF1976D2),
+                        selectedTextColor = Color(0xFF1976D2),
+                        indicatorColor = Color(0xFFE3F2FD)
+                    )
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+                    label = { Text("Profile") },
+                    selected = selectedTab == 3,
+                    onClick = { selectedTab = 3 },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = Color(0xFF1976D2),
                         selectedTextColor = Color(0xFF1976D2),
@@ -423,11 +432,12 @@ fun AdminDashboardScreen(
                         showDeleteDialog = true
                     }
                 )
-                1 -> AdminStatsTab(
+                1 -> AdminOrdersTab(adminViewModel = adminViewModel)
+                2 -> AdminStatsTab(
                     adminViewModel = adminViewModel,
                     dashboardViewModel = dashboardViewModel
                 )
-                2 -> AdminProfileTab(dashboardViewModel = dashboardViewModel)
+                3 -> AdminProfileTab(dashboardViewModel = dashboardViewModel)
             }
         }
     }
@@ -482,6 +492,39 @@ fun AdminDashboardScreen(
     }
 }
 
+@Composable
+fun AdminOrdersTab(adminViewModel: AdminDashboardViewModel) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.ShoppingCart,
+                contentDescription = null,
+                tint = Color(0xFF1976D2),
+                modifier = Modifier.size(80.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Orders",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Order management coming soon",
+                fontSize = 14.sp,
+                color = Color.Gray
+            )
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminFoodsTab(
@@ -497,7 +540,6 @@ fun AdminFoodsTab(
             .padding(16.dp)
     ) {
         item {
-            // Search Bar
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchQueryChange,
@@ -534,7 +576,6 @@ fun AdminFoodsTab(
         }
 
         item {
-            // Admin Welcome Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -576,7 +617,6 @@ fun AdminFoodsTab(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        // Show loading or foods
         if (dashboardViewModel.isFoodsLoading) {
             item {
                 Box(
@@ -589,7 +629,6 @@ fun AdminFoodsTab(
                 }
             }
         } else if (dashboardViewModel.foodsByCategory.isEmpty()) {
-            // Empty state
             item {
                 Box(
                     modifier = Modifier
@@ -621,7 +660,6 @@ fun AdminFoodsTab(
                 }
             }
         } else {
-            // Display foods grouped by category
             val foodsToDisplay = if (searchQuery.isNotEmpty()) {
                 dashboardViewModel.searchFoods(searchQuery).groupBy { it.category }
             } else {
@@ -630,7 +668,6 @@ fun AdminFoodsTab(
 
             foodsToDisplay.forEach { (category, foods) ->
                 item {
-                    // Category Header
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -689,7 +726,6 @@ fun AdminFoodItemCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Food Icon/Image placeholder
             Card(
                 modifier = Modifier.size(60.dp),
                 shape = RoundedCornerShape(8.dp),
@@ -712,7 +748,6 @@ fun AdminFoodItemCard(
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Food details
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -760,7 +795,6 @@ fun AdminFoodItemCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Delete button
             Button(
                 onClick = onDeleteClick,
                 colors = ButtonDefaults.buttonColors(
