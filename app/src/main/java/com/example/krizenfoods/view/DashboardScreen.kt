@@ -907,6 +907,7 @@
 //    }
 //}
 
+
 package com.example.krizenfoods.view
 
 import androidx.compose.foundation.layout.*
@@ -1003,12 +1004,37 @@ fun UserDashboardScreen(
                         }
                     }
 
-                    IconButton(onClick = { /* Add notification action */ }) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "Notifications",
-                            tint = Color.White
-                        )
+                    // 🔔 NOTIFICATION BADGE - FIXED VERSION
+                    if (viewModel.unreadNotificationCount > 0) {
+                        BadgedBox(
+                            badge = {
+                                Badge(
+                                    containerColor = Color.Red,
+                                    contentColor = Color.White
+                                ) {
+                                    Text(
+                                        text = viewModel.unreadNotificationCount.toString(),
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
+                        ) {
+                            IconButton(onClick = onNavigateToNotifications) {
+                                Icon(
+                                    imageVector = Icons.Default.Notifications,
+                                    contentDescription = "Notifications",
+                                    tint = Color.White
+                                )
+                            }
+                        }
+                    } else {
+                        IconButton(onClick = onNavigateToNotifications) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "Notifications",
+                                tint = Color.White
+                            )
+                        }
                     }
                 }
             )
