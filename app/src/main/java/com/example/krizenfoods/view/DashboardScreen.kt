@@ -22,19 +22,24 @@
 //
 //@Composable
 //fun DashboardScreen(
-//    viewModel: DashboardViewModel = viewModel()
+//    viewModel: DashboardViewModel = viewModel(),
+//    onNavigateToOrderForm: () -> Unit = {}
 //) {
 //    if (viewModel.isAdmin) {
 //        AdminDashboardScreen(dashboardViewModel = viewModel)
 //    } else {
-//        UserDashboardScreen(viewModel = viewModel)
+//        UserDashboardScreen(
+//            viewModel = viewModel,
+//            onNavigateToOrderForm = onNavigateToOrderForm
+//        )
 //    }
 //}
 //
 //@OptIn(ExperimentalMaterial3Api::class)
 //@Composable
 //fun UserDashboardScreen(
-//    viewModel: DashboardViewModel
+//    viewModel: DashboardViewModel,
+//    onNavigateToOrderForm: () -> Unit = {}
 //) {
 //    var selectedTab by remember { mutableStateOf(0) }
 //    var searchQuery by remember { mutableStateOf("") }
@@ -167,7 +172,10 @@
 //            when (selectedTab) {
 //                0 -> MenuTab(searchQuery = searchQuery, onSearchQueryChange = { searchQuery = it }, viewModel = viewModel)
 //                1 -> ProfileTab(viewModel = viewModel)
-//                2 -> CartTab(viewModel = viewModel)
+//                2 -> CartTab(
+//                    viewModel = viewModel,
+//                    onNavigateToOrderForm = onNavigateToOrderForm
+//                )
 //            }
 //        }
 //    }
@@ -462,7 +470,10 @@
 //}
 //
 //@Composable
-//fun CartTab(viewModel: DashboardViewModel) {
+//fun CartTab(
+//    viewModel: DashboardViewModel,
+//    onNavigateToOrderForm: () -> Unit = {}
+//) {
 //    Column(
 //        modifier = Modifier
 //            .fillMaxSize()
@@ -588,7 +599,7 @@
 //                    Spacer(modifier = Modifier.height(16.dp))
 //
 //                    Button(
-//                        onClick = { /* TODO: Order functionality */ },
+//                        onClick = onNavigateToOrderForm,
 //                        modifier = Modifier
 //                            .fillMaxWidth()
 //                            .height(56.dp),
@@ -920,14 +931,16 @@ import com.example.krizenfoods.viewmodel.DashboardViewModel
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel(),
-    onNavigateToOrderForm: () -> Unit = {}
+    onNavigateToOrderForm: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {}
 ) {
     if (viewModel.isAdmin) {
         AdminDashboardScreen(dashboardViewModel = viewModel)
     } else {
         UserDashboardScreen(
             viewModel = viewModel,
-            onNavigateToOrderForm = onNavigateToOrderForm
+            onNavigateToOrderForm = onNavigateToOrderForm,
+            onNavigateToNotifications = onNavigateToNotifications
         )
     }
 }
@@ -936,7 +949,8 @@ fun DashboardScreen(
 @Composable
 fun UserDashboardScreen(
     viewModel: DashboardViewModel,
-    onNavigateToOrderForm: () -> Unit = {}
+    onNavigateToOrderForm: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     var searchQuery by remember { mutableStateOf("") }

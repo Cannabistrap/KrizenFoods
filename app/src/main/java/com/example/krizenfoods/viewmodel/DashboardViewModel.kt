@@ -1,3 +1,4 @@
+
 //
 //package com.example.krizenfoods.viewmodel
 //
@@ -17,6 +18,7 @@
 //
 //    var userName by mutableStateOf("User")
 //    var userEmail by mutableStateOf("")
+//    var userId by mutableStateOf("")
 //    var isLoading by mutableStateOf(true)
 //    var isAdmin by mutableStateOf(false)
 //
@@ -46,13 +48,32 @@
 //    private fun loadUserData() {
 //        val currentUser = authController.getCurrentUser()
 //        if (currentUser != null) {
+//            userId = currentUser.uid
 //            userEmail = currentUser.email ?: ""
-//            userName = userEmail.substringBefore("@").replaceFirstChar {
-//                if (it.isLowerCase()) it.titlecase() else it.toString()
-//            }
 //            isAdmin = userEmail == "admin@gmail.com"
+//
+//            // Fetch real fullName from Firebase
+//            database.child("users").child(userId).child("fullName")
+//                .addListenerForSingleValueEvent(object : ValueEventListener {
+//                    override fun onDataChange(snapshot: DataSnapshot) {
+//                        val fullName = snapshot.getValue(String::class.java)
+//                        userName = fullName ?: userEmail.substringBefore("@").replaceFirstChar {
+//                            if (it.isLowerCase()) it.titlecase() else it.toString()
+//                        }
+//                        isLoading = false
+//                    }
+//
+//                    override fun onCancelled(error: DatabaseError) {
+//                        // Fallback to email prefix if fetch fails
+//                        userName = userEmail.substringBefore("@").replaceFirstChar {
+//                            if (it.isLowerCase()) it.titlecase() else it.toString()
+//                        }
+//                        isLoading = false
+//                    }
+//                })
+//        } else {
+//            isLoading = false
 //        }
-//        isLoading = false
 //    }
 //
 //    private fun loadFoods() {
@@ -96,10 +117,8 @@
 //        val existingItem = cartItems.find { it.food.id == food.id }
 //
 //        if (existingItem != null) {
-//            // Item already in cart, increase quantity
 //            updateQuantity(food.id, existingItem.quantity + 1)
 //        } else {
-//            // Add new item to cart
 //            cartItems = cartItems + CartItem(food, quantity = 1)
 //        }
 //    }
@@ -173,12 +192,20 @@ class DashboardViewModel : ViewModel() {
     val cartItemCount: Int
         get() = cartItems.sumOf { it.quantity }
 
+    // 🔔 NOTIFICATION STATES
+    var notifications by mutableStateOf<List<com.example.krizenfoods.model.Notification>>(emptyList())
+        private set
+
+    val unreadNotificationCount: Int
+        get() = notifications.count { !it.isRead }
+
     private val authController = AuthController()
     private val database = FirebaseDatabase.getInstance().reference
 
     init {
         loadUserData()
         loadFoods()
+        loadNotifications()
     }
 
     private fun loadUserData() {
@@ -288,5 +315,43 @@ class DashboardViewModel : ViewModel() {
 
     fun getCartQuantity(foodId: String): Int {
         return cartItems.find { it.food.id == foodId }?.quantity ?: 0
+    }
+
+    // 🔔 NOTIFICATION FUNCTIONS
+
+    private fun loadNotifications() {
+        if (userId.isEmpty()) return
+
+        database.child("notifications").child(userId)
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val notifs = mutableListOf<com.example.krizenfoods.model.Notification>()
+
+                    for (notifSnapshot in snapshot.children) {
+                        val notification = notifSnapshot.getValue(com.example.krizenfoods.model.Notification::class.java)
+                        if (notification != null) {
+                            notifs.add(notification)
+                        }
+                    }
+
+                    // Sort by timestamp (newest first)
+                    notifications = notifs.sortedByDescending { it.timestamp }
+                }
+
+                override fun onCancelled(error: DatabaseError) {}
+            })
+    }
+
+    fun markNotificationAsRead(notificationId: String) {
+        database.child("notifications").child(userId).child(notificationId)
+            .child("isRead").setValue(true)
+    }
+
+    fun markAllNotificationsAsRead() {
+        notifications.forEach { notification ->
+            if (!notification.isRead) {
+                markNotificationAsRead(notification.notificationId)
+            }
+        }
     }
 }
