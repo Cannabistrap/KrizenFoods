@@ -87,7 +87,7 @@
 //            val viewModel: DashboardViewModel = viewModel()
 //
 //            if (viewModel.isAdmin) {
-//                // Show Admin Dashboard with navigation callback
+//                // Show Admin Dashboard with full management interface
 //                AdminDashboardScreen(
 //                    dashboardViewModel = viewModel,
 //                    onNavigateToAddFood = {
@@ -115,6 +115,7 @@ package com.example.krizenfoods.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -123,6 +124,7 @@ import com.example.krizenfoods.view.AdminDashboardScreen
 import com.example.krizenfoods.view.DashboardScreen
 import com.example.krizenfoods.view.ForgotPasswordScreen
 import com.example.krizenfoods.view.LoginScreen
+import com.example.krizenfoods.view.OrderFormScreen
 import com.example.krizenfoods.view.SignupScreen
 import com.example.krizenfoods.view.SplashScreen
 import com.example.krizenfoods.viewmodel.DashboardViewModel
@@ -130,6 +132,9 @@ import com.example.krizenfoods.viewmodel.DashboardViewModel
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+
+    // Create a single ViewModel instance that will be shared
+    val dashboardViewModel: DashboardViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -195,19 +200,22 @@ fun AppNavigation() {
 
         // Dashboard Screen - Detects Admin or User
         composable("dashboard") {
-            val viewModel: DashboardViewModel = viewModel()
-
-            if (viewModel.isAdmin) {
-                // Show Admin Dashboard with full management interface
+            if (dashboardViewModel.isAdmin) {
+                // Show Admin Dashboard
                 AdminDashboardScreen(
-                    dashboardViewModel = viewModel,
+                    dashboardViewModel = dashboardViewModel,
                     onNavigateToAddFood = {
                         navController.navigate("add_food")
                     }
                 )
             } else {
                 // Show Regular User Dashboard
-                DashboardScreen(viewModel = viewModel)
+                DashboardScreen(
+                    viewModel = dashboardViewModel,
+                    onNavigateToOrderForm = {
+                        navController.navigate("order_form")
+                    }
+                )
             }
         }
 
@@ -216,6 +224,21 @@ fun AppNavigation() {
             AddFoodScreen(
                 onNavigateBack = {
                     navController.popBackStack()
+                }
+            )
+        }
+
+        // Order Form Screen (User Only)
+        composable("order_form") {
+            OrderFormScreen(
+                viewModel = dashboardViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onOrderSuccess = {
+                    navController.navigate("dashboard") {
+                        popUpTo("dashboard") { inclusive = true }
+                    }
                 }
             )
         }

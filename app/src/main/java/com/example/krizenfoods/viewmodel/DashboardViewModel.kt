@@ -6,47 +6,7 @@
 //import androidx.compose.runtime.setValue
 //import androidx.lifecycle.ViewModel
 //import com.example.krizenfoods.controllers.AuthController
-//
-//class DashboardViewModel : ViewModel() {
-//
-//    var userName by mutableStateOf("User")
-//    var userEmail by mutableStateOf("")
-//    var isLoading by mutableStateOf(true)
-//    var isAdmin by mutableStateOf(false)  // NEW: Check if user is admin
-//
-//    private val authController = AuthController()
-//
-//    init {
-//        loadUserData()
-//    }
-//
-//    private fun loadUserData() {
-//        val currentUser = authController.getCurrentUser()
-//        if (currentUser != null) {
-//            userEmail = currentUser.email ?: ""
-//            // Extract name from email (before @)
-//            userName = userEmail.substringBefore("@").capitalize()
-//
-//            // Check if user is admin
-//            isAdmin = userEmail == "admin@gmail.com"
-//        }
-//        isLoading = false
-//    }
-//
-//    fun onLogoutClick(onSuccess: () -> Unit) {
-//        // You can add logout functionality here later
-//        // For now, just navigate back
-//        onSuccess()
-//    }
-//}
-//
-//package com.example.krizenfoods.viewmodel
-//
-//import androidx.compose.runtime.getValue
-//import androidx.compose.runtime.mutableStateOf
-//import androidx.compose.runtime.setValue
-//import androidx.lifecycle.ViewModel
-//import com.example.krizenfoods.controllers.AuthController
+//import com.example.krizenfoods.model.CartItem
 //import com.example.krizenfoods.model.Food
 //import com.google.firebase.database.DataSnapshot
 //import com.google.firebase.database.DatabaseError
@@ -64,6 +24,16 @@
 //    var allFoods by mutableStateOf<List<Food>>(emptyList())
 //    var foodsByCategory by mutableStateOf<Map<String, List<Food>>>(emptyMap())
 //    var isFoodsLoading by mutableStateOf(true)
+//
+//    // 🛒 CART RELATED STATES
+//    var cartItems by mutableStateOf<List<CartItem>>(emptyList())
+//        private set
+//
+//    val cartTotal: Double
+//        get() = cartItems.sumOf { it.totalPrice }
+//
+//    val cartItemCount: Int
+//        get() = cartItems.sumOf { it.quantity }
 //
 //    private val authController = AuthController()
 //    private val database = FirebaseDatabase.getInstance().reference
@@ -100,10 +70,7 @@
 //                }
 //
 //                allFoods = foods
-//
-//                // Group foods by category
 //                foodsByCategory = foods.groupBy { it.category }
-//
 //                isFoodsLoading = false
 //            }
 //
@@ -123,12 +90,51 @@
 //        }
 //    }
 //
-////    fun onLogoutClick(onSuccess: () -> Unit) {
-////        authController.signOut()
-////        onSuccess()
-////    }
+//    // 🛒 CART FUNCTIONS
+//
+//    fun addToCart(food: Food) {
+//        val existingItem = cartItems.find { it.food.id == food.id }
+//
+//        if (existingItem != null) {
+//            // Item already in cart, increase quantity
+//            updateQuantity(food.id, existingItem.quantity + 1)
+//        } else {
+//            // Add new item to cart
+//            cartItems = cartItems + CartItem(food, quantity = 1)
+//        }
+//    }
+//
+//    fun removeFromCart(foodId: String) {
+//        cartItems = cartItems.filter { it.food.id != foodId }
+//    }
+//
+//    fun updateQuantity(foodId: String, newQuantity: Int) {
+//        if (newQuantity <= 0) {
+//            removeFromCart(foodId)
+//            return
+//        }
+//
+//        cartItems = cartItems.map { item ->
+//            if (item.food.id == foodId) {
+//                item.copy(quantity = newQuantity)
+//            } else {
+//                item
+//            }
+//        }
+//    }
+//
+//    fun clearCart() {
+//        cartItems = emptyList()
+//    }
+//
+//    fun isInCart(foodId: String): Boolean {
+//        return cartItems.any { it.food.id == foodId }
+//    }
+//
+//    fun getCartQuantity(foodId: String): Int {
+//        return cartItems.find { it.food.id == foodId }?.quantity ?: 0
+//    }
 //}
-
 
 package com.example.krizenfoods.viewmodel
 
@@ -148,6 +154,7 @@ class DashboardViewModel : ViewModel() {
 
     var userName by mutableStateOf("User")
     var userEmail by mutableStateOf("")
+    var userId by mutableStateOf("")
     var isLoading by mutableStateOf(true)
     var isAdmin by mutableStateOf(false)
 
@@ -177,13 +184,32 @@ class DashboardViewModel : ViewModel() {
     private fun loadUserData() {
         val currentUser = authController.getCurrentUser()
         if (currentUser != null) {
+            userId = currentUser.uid
             userEmail = currentUser.email ?: ""
-            userName = userEmail.substringBefore("@").replaceFirstChar {
-                if (it.isLowerCase()) it.titlecase() else it.toString()
-            }
             isAdmin = userEmail == "admin@gmail.com"
+
+            // Fetch real fullName from Firebase
+            database.child("users").child(userId).child("fullName")
+                .addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val fullName = snapshot.getValue(String::class.java)
+                        userName = fullName ?: userEmail.substringBefore("@").replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase() else it.toString()
+                        }
+                        isLoading = false
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        // Fallback to email prefix if fetch fails
+                        userName = userEmail.substringBefore("@").replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase() else it.toString()
+                        }
+                        isLoading = false
+                    }
+                })
+        } else {
+            isLoading = false
         }
-        isLoading = false
     }
 
     private fun loadFoods() {
@@ -227,10 +253,8 @@ class DashboardViewModel : ViewModel() {
         val existingItem = cartItems.find { it.food.id == food.id }
 
         if (existingItem != null) {
-            // Item already in cart, increase quantity
             updateQuantity(food.id, existingItem.quantity + 1)
         } else {
-            // Add new item to cart
             cartItems = cartItems + CartItem(food, quantity = 1)
         }
     }
