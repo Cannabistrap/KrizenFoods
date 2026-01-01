@@ -87,4 +87,9 @@ class AuthController {
     fun getCurrentUser(): FirebaseUser? {
         return auth.currentUser
     }
+
+    // Logout function
+    fun logout() {
+        auth.signOut()
+    }
 }
