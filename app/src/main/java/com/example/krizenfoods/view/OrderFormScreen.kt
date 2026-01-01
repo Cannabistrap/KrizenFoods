@@ -355,12 +355,58 @@
 //    // Save to Firebase
 //    database.child("orders").child(orderId).setValue(order)
 //        .addOnSuccessListener {
+//            // Create notification for order placed
+//            createOrderNotification(
+//                database = database,
+//                userId = viewModel.userId,
+//                orderId = orderId,
+//                type = "order_placed"
+//            )
 //            onSuccess()
 //        }
 //        .addOnFailureListener { error ->
 //            onError(error.message ?: "Failed to place order")
 //        }
 //}
+//
+//private fun createOrderNotification(
+//    database: com.google.firebase.database.DatabaseReference,
+//    userId: String,
+//    orderId: String,
+//    type: String
+//) {
+//    val notificationId = "notif_${System.currentTimeMillis()}"
+//    val (title, message) = when (type) {
+//        "order_placed" -> Pair(
+//            "Order Placed Successfully! 🎉",
+//            "Your order has been placed. Order ID: $orderId"
+//        )
+//        "order_confirmed" -> Pair(
+//            "Order Confirmed ✅",
+//            "Your order has been confirmed and is being prepared!"
+//        )
+//        "order_completed" -> Pair(
+//            "Order Completed 🎊",
+//            "Your order has been completed. Enjoy your meal!"
+//        )
+//        else -> Pair("Order Update", "Your order status has been updated")
+//    }
+//
+//    val notification = com.example.krizenfoods.model.Notification(
+//        notificationId = notificationId,
+//        userId = userId,
+//        orderId = orderId,
+//        title = title,
+//        message = message,
+//        type = type,
+//        timestamp = System.currentTimeMillis(),
+//        isRead = false
+//    )
+//
+//    database.child("notifications").child(userId).child(notificationId)
+//        .setValue(notification)
+//}
+
 
 package com.example.krizenfoods.view
 
@@ -378,6 +424,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.krizenfoods.helpers.NotificationHelper
 import com.example.krizenfoods.model.Order
 import com.example.krizenfoods.model.OrderItem
 import com.example.krizenfoods.viewmodel.DashboardViewModel
@@ -461,7 +508,7 @@ fun OrderFormScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Divider(color = Color.LightGray)
+                    HorizontalDivider(color = Color.LightGray)
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -717,54 +764,17 @@ private fun submitOrder(
     // Save to Firebase
     database.child("orders").child(orderId).setValue(order)
         .addOnSuccessListener {
-            // Create notification for order placed
-            createOrderNotification(
+            // ✅ Use NotificationHelper to send notification
+            NotificationHelper.sendNotification(
                 database = database,
                 userId = viewModel.userId,
                 orderId = orderId,
-                type = "order_placed"
+                type = "order_placed",
+                onSuccess = { onSuccess() },
+                onError = onError
             )
-            onSuccess()
         }
         .addOnFailureListener { error ->
             onError(error.message ?: "Failed to place order")
         }
-}
-
-private fun createOrderNotification(
-    database: com.google.firebase.database.DatabaseReference,
-    userId: String,
-    orderId: String,
-    type: String
-) {
-    val notificationId = "notif_${System.currentTimeMillis()}"
-    val (title, message) = when (type) {
-        "order_placed" -> Pair(
-            "Order Placed Successfully! 🎉",
-            "Your order has been placed. Order ID: $orderId"
-        )
-        "order_confirmed" -> Pair(
-            "Order Confirmed ✅",
-            "Your order has been confirmed and is being prepared!"
-        )
-        "order_completed" -> Pair(
-            "Order Completed 🎊",
-            "Your order has been completed. Enjoy your meal!"
-        )
-        else -> Pair("Order Update", "Your order status has been updated")
-    }
-
-    val notification = com.example.krizenfoods.model.Notification(
-        notificationId = notificationId,
-        userId = userId,
-        orderId = orderId,
-        title = title,
-        message = message,
-        type = type,
-        timestamp = System.currentTimeMillis(),
-        isRead = false
-    )
-
-    database.child("notifications").child(userId).child(notificationId)
-        .setValue(notification)
 }

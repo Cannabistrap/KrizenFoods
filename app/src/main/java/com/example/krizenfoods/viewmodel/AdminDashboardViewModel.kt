@@ -182,11 +182,14 @@
 
 package com.example.krizenfoods.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.example.krizenfoods.helpers.NotificationHelper
 import com.example.krizenfoods.model.Food
+import com.example.krizenfoods.model.Order
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -199,12 +202,32 @@ class AdminDashboardViewModel : ViewModel() {
     var isLoading by mutableStateOf(true)
     var errorMessage by mutableStateOf("")
     var successMessage by mutableStateOf("")
-    var deletingFoodId by mutableStateOf<String?>(null) // Track which food is being deleted
+    var deletingFoodId by mutableStateOf<String?>(null)
+
+    // 📦 ORDER MANAGEMENT STATES
+    var allOrders by mutableStateOf<List<Order>>(emptyList())
+        private set
+
+    var pendingOrders by mutableStateOf<List<Order>>(emptyList())
+        private set
+
+    var confirmedOrders by mutableStateOf<List<Order>>(emptyList())
+        private set
+
+    var deliveredOrders by mutableStateOf<List<Order>>(emptyList())
+        private set
+
+    var rejectedOrders by mutableStateOf<List<Order>>(emptyList())
+        private set
+
+    var isOrdersLoading by mutableStateOf(true)
+    var processingOrderId by mutableStateOf<String?>(null)
 
     private val database = FirebaseDatabase.getInstance().reference
 
     init {
         loadAdminData()
+        loadOrders()
     }
 
     private fun loadAdminData() {
@@ -235,6 +258,171 @@ class AdminDashboardViewModel : ViewModel() {
         })
     }
 
+    // 📦 LOAD ALL ORDERS
+    private fun loadOrders() {
+        isOrdersLoading = true
+
+        database.child("orders")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val orders = mutableListOf<Order>()
+
+                    for (orderSnapshot in snapshot.children) {
+                        val order = orderSnapshot.getValue(Order::class.java)
+                        if (order != null) {
+                            orders.add(order)
+                        }
+                    }
+
+                    // Sort by date (newest first)
+                    allOrders = orders.sortedByDescending { it.orderDate }
+
+                    // Group by status
+                    pendingOrders = orders.filter { it.status == "pending" }
+                        .sortedByDescending { it.orderDate }
+
+                    confirmedOrders = orders.filter { it.status == "confirmed" }
+                        .sortedByDescending { it.orderDate }
+
+                    deliveredOrders = orders.filter { it.status == "delivered" }
+                        .sortedByDescending { it.orderDate }
+
+                    rejectedOrders = orders.filter { it.status == "rejected" }
+                        .sortedByDescending { it.orderDate }
+
+                    isOrdersLoading = false
+
+                    Log.d("AdminVM", "📦 Loaded ${orders.size} orders")
+                    Log.d("AdminVM", "⏳ Pending: ${pendingOrders.size}")
+                    Log.d("AdminVM", "✅ Confirmed: ${confirmedOrders.size}")
+                    Log.d("AdminVM", "🎊 Delivered: ${deliveredOrders.size}")
+                    Log.d("AdminVM", "❌ Rejected: ${rejectedOrders.size}")
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    isOrdersLoading = false
+                    Log.e("AdminVM", "❌ Error loading orders: ${error.message}")
+                }
+            })
+    }
+
+    // ✅ CONFIRM ORDER
+    fun confirmOrder(order: Order) {
+        processingOrderId = order.orderId
+
+        val updates = mapOf(
+            "status" to "confirmed",
+            "updatedAt" to System.currentTimeMillis()
+        )
+
+        database.child("orders")
+            .child(order.orderId)
+            .updateChildren(updates)
+            .addOnSuccessListener {
+                // Send notification to user
+                NotificationHelper.sendNotification(
+                    database = database,
+                    userId = order.userId,
+                    orderId = order.orderId,
+                    type = "order_confirmed",
+                    onSuccess = {
+                        processingOrderId = null
+                        successMessage = "✅ Order confirmed!"
+                        clearMessageAfterDelay()
+                        Log.d("AdminVM", "✅ Order ${order.orderId} confirmed")
+                    },
+                    onError = { error ->
+                        processingOrderId = null
+                        errorMessage = error
+                        clearMessageAfterDelay()
+                    }
+                )
+            }
+            .addOnFailureListener { error ->
+                processingOrderId = null
+                errorMessage = "❌ Failed to confirm: ${error.message}"
+                clearMessageAfterDelay()
+            }
+    }
+
+    // ❌ REJECT ORDER
+    fun rejectOrder(order: Order) {
+        processingOrderId = order.orderId
+
+        val updates = mapOf(
+            "status" to "rejected",
+            "updatedAt" to System.currentTimeMillis()
+        )
+
+        database.child("orders")
+            .child(order.orderId)
+            .updateChildren(updates)
+            .addOnSuccessListener {
+                // Send notification to user
+                NotificationHelper.sendNotification(
+                    database = database,
+                    userId = order.userId,
+                    orderId = order.orderId,
+                    type = "order_rejected",
+                    onSuccess = {
+                        processingOrderId = null
+                        successMessage = "Order rejected"
+                        clearMessageAfterDelay()
+                        Log.d("AdminVM", "❌ Order ${order.orderId} rejected")
+                    },
+                    onError = { error ->
+                        processingOrderId = null
+                        errorMessage = error
+                        clearMessageAfterDelay()
+                    }
+                )
+            }
+            .addOnFailureListener { error ->
+                processingOrderId = null
+                errorMessage = "❌ Failed to reject: ${error.message}"
+                clearMessageAfterDelay()
+            }
+    }
+
+    // 🎊 MARK AS DELIVERED
+    fun markAsDelivered(order: Order) {
+        processingOrderId = order.orderId
+
+        val updates = mapOf(
+            "status" to "delivered",
+            "updatedAt" to System.currentTimeMillis()
+        )
+
+        database.child("orders")
+            .child(order.orderId)
+            .updateChildren(updates)
+            .addOnSuccessListener {
+                // Send notification to user
+                NotificationHelper.sendNotification(
+                    database = database,
+                    userId = order.userId,
+                    orderId = order.orderId,
+                    type = "order_delivered",
+                    onSuccess = {
+                        processingOrderId = null
+                        successMessage = "🎊 Marked as delivered!"
+                        clearMessageAfterDelay()
+                        Log.d("AdminVM", "🎊 Order ${order.orderId} delivered")
+                    },
+                    onError = { error ->
+                        processingOrderId = null
+                        errorMessage = error
+                        clearMessageAfterDelay()
+                    }
+                )
+            }
+            .addOnFailureListener { error ->
+                processingOrderId = null
+                errorMessage = "❌ Failed to update: ${error.message}"
+                clearMessageAfterDelay()
+            }
+    }
+
     // Add Food Function
     fun addFood(
         name: String,
@@ -245,11 +433,9 @@ class AdminDashboardViewModel : ViewModel() {
         isAvailable: Boolean,
         onSuccess: () -> Unit
     ) {
-        // Clear previous messages
         errorMessage = ""
         successMessage = ""
 
-        // Validation
         if (name.isBlank()) {
             errorMessage = "Please enter food name"
             return
@@ -276,13 +462,10 @@ class AdminDashboardViewModel : ViewModel() {
             return
         }
 
-        // Start loading
         isLoading = true
 
-        // Generate unique ID
         val foodId = database.child("foods").push().key ?: return
 
-        // Create Food object
         val food = Food(
             id = foodId,
             name = name,
@@ -295,7 +478,6 @@ class AdminDashboardViewModel : ViewModel() {
             updatedAt = System.currentTimeMillis()
         )
 
-        // Save to Firebase
         database.child("foods").child(foodId).setValue(food)
             .addOnSuccessListener {
                 isLoading = false
@@ -316,20 +498,20 @@ class AdminDashboardViewModel : ViewModel() {
             .addOnSuccessListener {
                 deletingFoodId = null
                 successMessage = "✅ Food item deleted successfully!"
-
-                // Clear success message after 3 seconds
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    successMessage = ""
-                }, 3000)
+                clearMessageAfterDelay()
             }
             .addOnFailureListener { error ->
                 deletingFoodId = null
                 errorMessage = "❌ Failed to delete: ${error.message}"
-
-                // Clear error message after 3 seconds
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    errorMessage = ""
-                }, 3000)
+                clearMessageAfterDelay()
             }
+    }
+
+    // Helper to clear messages after delay
+    private fun clearMessageAfterDelay() {
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            successMessage = ""
+            errorMessage = ""
+        }, 3000)
     }
 }
