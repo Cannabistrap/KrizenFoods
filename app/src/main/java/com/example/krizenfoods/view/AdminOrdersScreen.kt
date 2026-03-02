@@ -1,6 +1,5 @@
+
 package com.example.krizenfoods.view
-
-
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -217,38 +216,23 @@ fun AdminOrdersScreen(
                 FilterChip(
                     selected = selectedFilter == "pending",
                     onClick = { selectedFilter = "pending" },
-                    label = { Text("Pending (${adminViewModel.pendingOrders.size})") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                    label = { Text("Pending (${adminViewModel.pendingOrders.size})") }
                 )
                 FilterChip(
                     selected = selectedFilter == "confirmed",
                     onClick = { selectedFilter = "confirmed" },
-                    label = { Text("Confirmed (${adminViewModel.confirmedOrders.size})") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                    label = { Text("Confirmed (${adminViewModel.confirmedOrders.size})") }
                 )
                 FilterChip(
                     selected = selectedFilter == "delivered",
                     onClick = { selectedFilter = "delivered" },
-                    label = { Text("Delivered (${adminViewModel.deliveredOrders.size})") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                    label = { Text("Delivered (${adminViewModel.deliveredOrders.size})") }
+                )
+                // ✅ Added Cancelled Chip
+                FilterChip(
+                    selected = selectedFilter == "cancelled",
+                    onClick = { selectedFilter = "cancelled" },
+                    label = { Text("Cancelled (${adminViewModel.cancelledOrders.size})") }
                 )
             }
 
@@ -267,6 +251,7 @@ fun AdminOrdersScreen(
                     "pending" -> adminViewModel.pendingOrders
                     "confirmed" -> adminViewModel.confirmedOrders
                     "delivered" -> adminViewModel.deliveredOrders
+                    "cancelled" -> adminViewModel.cancelledOrders // ✅ Added
                     else -> adminViewModel.pendingOrders
                 }
 
@@ -407,7 +392,7 @@ private fun AdminOrderCard(
         "pending" -> Color(0xFFFF9800)
         "confirmed" -> Color(0xFF2196F3)
         "delivered" -> Color(0xFF4CAF50)
-        "rejected" -> Color(0xFFD32F2F)
+        "rejected", "cancelled" -> Color(0xFFD32F2F) // ✅ Added cancelled
         else -> Color.Gray
     }
 
@@ -498,6 +483,25 @@ private fun AdminOrderCard(
 
             Spacer(modifier = Modifier.height(8.dp))
             Text("Ordered: ${formatTimestamp(order.orderDate)}", fontSize = 12.sp, color = Color.Gray)
+
+            // ✅ Cancelled Message
+            if (order.status == "cancelled") {
+                Spacer(modifier = Modifier.height(12.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFFFEBEE), RoundedCornerShape(8.dp))
+                        .padding(12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "THE ORDER HAS BEEN CANCELLED BY USER",
+                        color = Color(0xFFD32F2F),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
+                }
+            }
 
             // Action Buttons
             if (order.status == "pending") {

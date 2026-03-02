@@ -40,6 +40,9 @@ class AdminDashboardViewModel : ViewModel() {
     var rejectedOrders by mutableStateOf<List<Order>>(emptyList())
         private set
 
+    var cancelledOrders by mutableStateOf<List<Order>>(emptyList()) // ✅ Added cancelled state
+        private set
+
     var isOrdersLoading by mutableStateOf(true)
     var processingOrderId by mutableStateOf<String?>(null)
 
@@ -112,6 +115,9 @@ class AdminDashboardViewModel : ViewModel() {
                     rejectedOrders = orders.filter { it.status == "rejected" }
                         .sortedByDescending { it.orderDate }
 
+                    cancelledOrders = orders.filter { it.status == "cancelled" } // ✅ Group cancelled
+                        .sortedByDescending { it.orderDate }
+
                     isOrdersLoading = false
 
                     Log.d("AdminVM", "📦 Loaded ${orders.size} orders")
@@ -119,6 +125,7 @@ class AdminDashboardViewModel : ViewModel() {
                     Log.d("AdminVM", "✅ Confirmed: ${confirmedOrders.size}")
                     Log.d("AdminVM", "🎊 Delivered: ${deliveredOrders.size}")
                     Log.d("AdminVM", "❌ Rejected: ${rejectedOrders.size}")
+                    Log.d("AdminVM", "🚫 Cancelled: ${cancelledOrders.size}")
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -349,6 +356,7 @@ class AdminDashboardViewModel : ViewModel() {
         confirmedOrders = emptyList()
         deliveredOrders = emptyList()
         rejectedOrders = emptyList()
+        cancelledOrders = emptyList()
 
         onSuccess()
     }
