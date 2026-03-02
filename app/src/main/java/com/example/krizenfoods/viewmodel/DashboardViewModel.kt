@@ -23,6 +23,7 @@ class DashboardViewModel : ViewModel() {
     var userName by mutableStateOf("User")
     var userEmail by mutableStateOf("")
     var userId by mutableStateOf("")
+    var userPhone by mutableStateOf("") // ✅ ADDED: To store saved phone number
     var isLoading by mutableStateOf(true)
     var isAdmin by mutableStateOf(false)
 
@@ -80,10 +81,13 @@ class DashboardViewModel : ViewModel() {
             userEmail = currentUser.email ?: ""
             isAdmin = userEmail == "admin@gmail.com"
 
-            database.child("users").child(userId).child("fullName")
+            // ✅ FETCH ENTIRE USER OBJECT
+            database.child("users").child(userId)
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
-                        val fullName = snapshot.getValue(String::class.java)
+                        val fullName = snapshot.child("fullName").getValue(String::class.java)
+                        userPhone = snapshot.child("phoneNumber").getValue(String::class.java) ?: "" // ✅ LOAD PHONE
+                        
                         userName = fullName ?: userEmail.substringBefore("@").replaceFirstChar {
                             if (it.isLowerCase()) it.titlecase() else it.toString()
                         }
@@ -100,6 +104,17 @@ class DashboardViewModel : ViewModel() {
         } else {
             isLoading = false
         }
+    }
+
+    // ✅ ADDED: Function to save phone number to profile
+    fun saveUserPhoneNumber(phone: String) {
+        if (userId.isEmpty() || LoginViewModel.isHardcodedAdmin) return
+        
+        database.child("users").child(userId).child("phoneNumber").setValue(phone)
+            .addOnSuccessListener {
+                userPhone = phone
+                Log.d("DashboardVM", "✅ Phone number saved: $phone")
+            }
     }
 
     private fun loadFoods() {
@@ -274,6 +289,7 @@ class DashboardViewModel : ViewModel() {
         userName = "User"
         userEmail = ""
         userId = ""
+        userPhone = "" // ✅ RESET PHONE
         isAdmin = false
         allFoods = emptyList()
         foodsByCategory = emptyMap()
