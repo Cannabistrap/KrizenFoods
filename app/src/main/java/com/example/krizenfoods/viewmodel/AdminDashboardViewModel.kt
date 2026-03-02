@@ -336,8 +336,10 @@ class AdminDashboardViewModel : ViewModel() {
             errorMessage = ""
         }, 3000)
     }
+
     fun logout(onSuccess: () -> Unit) {
         authController.logout()
+        LoginViewModel.isHardcodedAdmin = false // ✅ RESET BYPASS
 
         // Clear ALL local data
         totalUsers = "0"

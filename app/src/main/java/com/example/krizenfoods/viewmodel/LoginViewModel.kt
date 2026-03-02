@@ -1,7 +1,5 @@
 package com.example.krizenfoods.viewmodel
 
-
-
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -16,6 +14,10 @@ class LoginViewModel : ViewModel() {
 
     private val authController = AuthController()
 
+    companion object {
+        var isHardcodedAdmin = false
+    }
+
     fun onLoginClick(onSuccess: () -> Unit) {
         if (email.isBlank() || password.isBlank()) {
             errorMessage = "Please fill all fields"
@@ -25,14 +27,24 @@ class LoginViewModel : ViewModel() {
         isLoading = true
         errorMessage = ""
 
+        // ✅ HARDCODED ADMIN BYPASS
+        if (email == "admin@gmail.com" && password == "@admin123") {
+            isHardcodedAdmin = true
+            isLoading = false
+            onSuccess()
+            return
+        }
+
         authController.login(
             email = email,
             password = password,
             onSuccess = {
+                isHardcodedAdmin = false
                 isLoading = false
                 onSuccess()
             },
             onError = { error ->
+                isHardcodedAdmin = false
                 isLoading = false
                 errorMessage = error
             }
